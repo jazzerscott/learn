@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Console Attach",
+            "type": "node",
+            "request": "attach",
+            "sourceMaps": true,
+            "outFiles": [ "${workspaceRoot}/dist/**/*.js" ],
+            "localRoot": "${workspaceRoot}/dist",
+            "port": 8201
+        },
+        {
+            "name": "Docker Attach",
+            "type": "node",
+            "request": "attach",
+            "port": 8201,
+            "sourceMaps": true,
+            "outFiles": [ "${workspaceRoot}/dist/**/*.js" ],
+            "localRoot": "${workspaceRoot}/dist",
+            "remoteRoot": "/app"
+        }
+    ]
+}

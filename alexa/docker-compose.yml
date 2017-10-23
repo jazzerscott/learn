@@ -1,0 +1,17 @@
+version: '2'
+
+services:
+  learn-alexa:
+    image: learn-alexa
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8200:8200"
+      - "8201:8201"
+    volumes:
+      - ../alexa/dist:/app
+      - ../alexa/node_modules:/app/node_modules
+    environment:
+      - REMOTE_DEBUGGING
+      - LISTEN_PORT=8200
