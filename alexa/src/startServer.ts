@@ -2,11 +2,13 @@ import { Container } from 'inversify';
 import * as bodyParser from 'body-parser';
 import { InversifyExpressServer, interfaces, TYPE } from 'inversify-express-utils';
 import { LearningController } from './controllers/learning-controller';
+import { S3FileProvider } from './providers/s3-file-provider';
 export function startServer(): Promise<any> {
     return new Promise<any>((resolve, reject) => {
         try {
             let container = new Container();
             container.bind<interfaces.Controller>(TYPE.Controller).to(LearningController).whenTargetNamed('LearningController');
+            container.bind<S3FileProvider>('S3FileProvider').to(S3FileProvider);
             let server = new InversifyExpressServer(container);
             
             server.setConfig((app) => {
@@ -30,8 +32,8 @@ export function startServer(): Promise<any> {
                 });
             });
             let svr = server.build();
-            svr.listen(process.env.LISTEN_PORT, () => {
-                console.log(`Listening on port ${process.env.LISTEN_PORT}`);
+            svr.listen(8200, () => {
+                console.log(`Listening on port 8200`);
             });
             resolve(true);
         } catch (err) {
