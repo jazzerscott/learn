@@ -22,7 +22,7 @@ export class DynamoLogProvider {
         const entry = new LogEntry();
         entry.message = message;
         entry.level = level;
-        entry.date = new Date();
+        entry.logDate = new Date();
         this.log(entry);
     }
 
@@ -31,11 +31,11 @@ export class DynamoLogProvider {
             TableName : "logs",
             KeySchema: [       
                 { AttributeName: "id", KeyType: "HASH"},  //Partition key
-                { AttributeName: "date", KeyType: "RANGE" }  //Sort key
+                { AttributeName: "logDate", KeyType: "RANGE" }  //Sort key
             ],
             AttributeDefinitions: [       
                 { AttributeName: "id", AttributeType: "S" },
-                { AttributeName: "date", AttributeType: "S" }
+                { AttributeName: "logDate", AttributeType: "S" }
             ],
             ProvisionedThroughput: {       
                 ReadCapacityUnits: 5, 
@@ -60,32 +60,47 @@ export class DynamoLogProvider {
         dynamoParams.TableName = 'logs';
         dynamoParams.Item = {
            "id": { S: logEntry.id },
-           "date": {S: logEntry.date.toISOString() },
+           "logDate": {S: logEntry.logDate.toISOString() },
            "message": { S: logEntry.message},
            "level": { S: logEntry.level },
            "data": { S: JSON.stringify(logEntry.data || {} ) }
 
         }
         try {
+            // console.time('put')
             dynamoDb.putItem(dynamoParams, (err,data) =>{
                 if (err) {
                     console.log(err);
+                } else {
+                    // console.timeEnd('put');
                 }
             });
         } catch (err) {
             console.log(err);
         }
     }
-    getLogs(): Promise<AWS.DynamoDB.ScanOutput> {
+    getLogs(minutes: number): Promise<AWS.DynamoDB.ScanOutput> {
+        let startDate = new Date();
+        startDate = new Date(startDate.setMinutes((-1 * minutes) + startDate.getMinutes()));
         return new Promise<any>((resolve, reject) => {
             const params = {
-                TableName: 'logs'
+                ExpressionAttributeValues: {
+                ":d": {
+                    S: startDate.toISOString()
+                    }
+                }, 
+                FilterExpression: "logDate > :d",
+                TableName: "logs"
             }
+            // console.time('scan');
             dynamoDb.scan(params, (err, data) => {
                 if(err) {
                     reject(err);
+                    return;
                 } else {
                     resolve(data);
+                    // console.timeEnd('scan');
+                    return;
                 }
             });
         })

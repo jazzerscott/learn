@@ -64,15 +64,16 @@ export class LearningController implements interfaces.Controller {
         
         try {
             this.logger.debug('reading logs');
-            let logs = await this.logger.getLogs();
-            console.log(logs);
-            let logItems = logs.Items.map(x => {return { message: x.message.S, date: x.date.S}});
+            let mins = Number(request.query['mins'] || '60');
+            let logs = await this.logger.getLogs(mins);
+            // console.log(logs);
+            let logItems = logs.Items.map(x => {return { message: x.message.S, date: x.logDate.S, level: x.level.S}});
             logItems = logItems.sort((x, y) => { 
                 let dateX = new Date(x.date);
                 let dateY = new Date(y.date);
                 return dateY.getTime() - dateX.getTime();
             });
-            let logDisplay = logItems.map(x => {return `${x.date} ${x.message}`});
+            let logDisplay = logItems.map(x => {return `${x.date} ${x.level} ${x.message}`});
             response.setHeader('Content-Type', 'text/html');
             response.send(logDisplay.join('<br />'));
         } catch (err) {

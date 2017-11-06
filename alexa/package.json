@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "start": "concurrently -k -p name -n \"tsc,svr\" -c \"blue,green\" \"npm run build:watch\" \"npm run serve\"",
+    "start": "npm run serve",
     "build": "rm -rf dist && tsc",
     "build:watch": "tsc -w",
     "db-init": "AWS_PROFILE=jazzer node ./dist/db-init.js" ,
