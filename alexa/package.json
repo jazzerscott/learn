@@ -7,6 +7,7 @@
     "start": "concurrently -k -p name -n \"tsc,svr\" -c \"blue,green\" \"npm run build:watch\" \"npm run serve\"",
     "build": "rm -rf dist && tsc",
     "build:watch": "tsc -w",
+    "db-init": "AWS_PROFILE=jazzer node ./dist/db-init.js" ,
     "serve": "AWS_PROFILE=jazzer nodemon --inspect=8201 ./dist/index.js ",
     "lint": "tslint 'src/**/*.*' -e src/**/*.json --force -c ../tslint.json",
     "pretest": "rm -rf test-output && tsc -p test",
@@ -34,6 +35,7 @@
     "faker": "^4.1.0",
     "inversify": "^4.3.0",
     "inversify-express-utils": "^4.0.1",
-    "reflect-metadata": "0.1.9"
+    "reflect-metadata": "0.1.9",
+    "uuid": "^3.1.0"
   }
 }

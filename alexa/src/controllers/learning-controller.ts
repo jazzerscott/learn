@@ -2,14 +2,19 @@ import * as express from 'express';
 import { interfaces, controller, httpGet } from 'inversify-express-utils';
 import { injectable, inject } from 'inversify';
 import { S3FileProvider } from '../providers/s3-file-provider';
+import { DynamoLogProvider } from '../providers/dynamo-log-provider';
+import { Data } from '../model/data';
 //import * as faker from 'faker';
 
 @controller('/learn')
 @injectable()
 export class LearningController implements interfaces.Controller {
 
-    // private words:string[] = [];
-    constructor(@inject('S3FileProvider') private s3FileProvider: S3FileProvider)
+    private words:Data = null;
+    constructor(
+        @inject('S3FileProvider') private s3FileProvider: S3FileProvider,
+        @inject('Logger') private logger: DynamoLogProvider
+    )
     {
         /*
         this.words = ['aardvark','addax','alligator','alpaca','anteater','antelope','aoudad','ape',
@@ -39,15 +44,39 @@ export class LearningController implements interfaces.Controller {
         
         try {
             let obj = await this.s3FileProvider.getObject({Bucket: 'animal-list', Key: 'data.json'});
-            let words = JSON.parse(obj.Body.toString());
+            if (this.words === null) {
+                this.words = JSON.parse(obj.Body.toString());
+            }
             response.setHeader('Content-Type', 'application/json');
             let letter = request.params.letter || ''
             letter = letter.toLowerCase();
-            console.log(`getting words that start with ${letter}`);
-            let letterWords = words.animals.filter( x => x.substring(0,1).toLowerCase() === letter);
+            this.logger.debug(`getting words that start with ${letter}`);
+            let letterWords = this.words.animals.filter( x => x.substring(0,1).toLowerCase() === letter);
             response.send(letterWords);
         } catch (err) {
-            console.log(err);
+            this.logger.error(err);
+            response.sendStatus(500);
+        }
+    }
+
+    @httpGet('/logs')
+    public async getLogs(request: express.Request, response: express.Response) {
+        
+        try {
+            this.logger.debug('reading logs');
+            let logs = await this.logger.getLogs();
+            console.log(logs);
+            let logItems = logs.Items.map(x => {return { message: x.message.S, date: x.date.S}});
+            logItems = logItems.sort((x, y) => { 
+                let dateX = new Date(x.date);
+                let dateY = new Date(y.date);
+                return dateY.getTime() - dateX.getTime();
+            });
+            let logDisplay = logItems.map(x => {return `${x.date} ${x.message}`});
+            response.setHeader('Content-Type', 'text/html');
+            response.send(logDisplay.join('<br />'));
+        } catch (err) {
+            this.logger.error(err);
             response.sendStatus(500);
         }
     }
